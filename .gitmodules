@@ -1,0 +1,3 @@
+[submodule "wade-mcp-servers"]
+	path = wade-mcp-servers
+	url = https://github.com/abcnuts/wade-mcp-servers.git

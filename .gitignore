@@ -1,0 +1,23 @@
+# Sensitive files
+*.env
+**/credentials/
+**/*secret*
+**/*token*
+**/*key*
+
+# OpenClaw internal state
+.openclaw/workspace-state.json
+.openclaw/sessions/
+.openclaw/logs/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Memory files may contain sensitive data - review before committing
+# memory/
+# MEMORY.md
+
+# Temporary files
+*.tmp
+*.log
