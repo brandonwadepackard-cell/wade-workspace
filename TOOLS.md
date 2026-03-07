@@ -13,6 +13,18 @@ Things like:
 - Device nicknames
 - Anything environment-specific
 
+## System Prompts Collection
+
+**Local folder:** `system-prompts/`  
+**GitHub repo:** https://github.com/brandonwadepackard-cell/system-prompts
+
+Core frameworks available:
+- **THE-ARCHITECT** - Master prompt engineering
+- **LOGOS** - Truth distillation  
+- **EXTRACT-HIDDEN** - Deep pattern analysis
+- **ONTOS** - Essential nature analysis
+- **AI-INTEGRATION-SERVICE** - Turnkey AI-to-AI communication
+
 ## Examples
 
 ```markdown
