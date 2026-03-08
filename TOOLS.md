@@ -1,52 +1,64 @@
 # TOOLS.md - Local Notes
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+Skills define _how_ tools work. This file is for _your_ specifics.
 
-## What Goes Here
+## Supabase
 
-Things like:
+Two active projects. **Use the anon JWT key** for REST API calls — the `sb_publishable_` key does NOT work with the REST API.
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+### brandonwadepackard-cell (primary — memory/identity)
+- **URL:** `https://rjcoeoropwvqzvinopze.supabase.co`
+- **Service role key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqY29lb3JvcHd2cXp2aW5vcHplIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzY3NjQ1NSwiZXhwIjoyMDc5MjUyNDU1fQ.nShbHUWGKorYP9u8FTyYIROFBSNbDfj7nREHUFeWKr0`
+- See `skills/supabase/SKILL.md` for full curl examples
 
-## System Prompts Collection
+### make-a-million (game project)
+- **URL:** `https://shfygoaslyinjcvmgels.supabase.co`
+- **Anon key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZnlnb2FzbHlpbmpjdm1nZWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NDUyODgsImV4cCI6MjA4NjEyMTI4OH0.OGDOSARbkc2g_4c4oEHDK4hBmtly7FlwYiUEDcJhOrI`
+- See `skills/supabase/SKILL.md` for full curl examples
 
-**Local folder:** `system-prompts/`  
-**GitHub repo:** https://github.com/brandonwadepackard-cell/system-prompts
+### MCP Note
+The file `~/.openclaw/mcp-servers.json` exists but OpenClaw does NOT load it. OpenClaw uses `mcporter` for MCP servers, which is separate. The Supabase MCP requires browser-based OAuth login that hasn't been set up. **Use the curl REST API approach above — it works.**
 
-Core frameworks available:
-- **THE-ARCHITECT** - Master prompt engineering
-- **LOGOS** - Truth distillation  
-- **EXTRACT-HIDDEN** - Deep pattern analysis
-- **ONTOS** - Essential nature analysis
-- **AI-INTEGRATION-SERVICE** - Turnkey AI-to-AI communication
+## Google Workspace (gog)
 
-## Examples
+**Status: AUTHENTICATED** — ready to use.
 
-```markdown
-### Cameras
+- **Binary:** `/opt/homebrew/bin/gog`
+- **Account:** `brandonwadepackard@gmail.com`
+- **Services:** gmail, calendar, drive, contacts, docs, sheets
+- **Keyring:** file backend at `~/Library/Application Support/gogcli/keyring/`
 
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
+### How to call gog
 
-### SSH
+**ALWAYS set both env vars inline.** OpenClaw does not source `~/.zshrc`.
 
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
+```bash
+GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog <command>
 ```
 
-## Why Separate?
+### Examples
 
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+```bash
+# List recent emails
+GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog gmail search 'newer_than:1d' --max 10
 
----
+# Read a specific email
+GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog gmail read <messageId>
 
-Add whatever helps you do your job. This is your cheat sheet.
+# List calendar events
+GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog calendar events primary --from $(date -u +%Y-%m-%dT00:00:00Z)
+
+# List Drive files
+GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog drive search "name contains 'project'" --max 10
+
+# Verify auth works
+GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog auth list
+```
+
+### If auth is ever lost
+Re-run (Brandon does this once in terminal — browser window required):
+```bash
+rm -rf "$HOME/Library/Application Support/gogcli/keyring"
+gog auth add brandonwadepackard@gmail.com --services gmail,calendar,drive,contacts,docs,sheets
+# Enter passphrase when prompted: wade
+```
