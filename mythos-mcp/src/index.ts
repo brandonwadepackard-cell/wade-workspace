@@ -77,7 +77,12 @@ function buildServer(): McpServer {
       const result = await postJson<Record<string, unknown>>(
         `${base}/graphs/${encodeURIComponent(flow_id)}/invoke`,
         params ?? {},
-        env.mythosApiKey ? { Authorization: `Bearer ${env.mythosApiKey}` } : undefined,
+        env.mythosApiKey
+          ? {
+              "X-API-Key": env.mythosApiKey,
+              Authorization: `Bearer ${env.mythosApiKey}`,
+            }
+          : undefined,
       );
 
       return {
