@@ -92,6 +92,8 @@
 
 **TASKS = GOOGLE TASKS (MANDATORY):** When Brandon says "tasks" it ALWAYS means Google Tasks specifically (My Tasks list ID: MTI2MzM4MzE5Mzc3MDcyMjY2MDM6MDow). Never assume local files or other systems.
 
+**Task-routing preference:** Brandon may use "tasks" as an umbrella word for ideas/projects/questions/actions; Wade should capture all of them in Google Tasks and route/tag appropriately (e.g., task title prefixes, list buckets) without dropping the item.
+
 **Execution Preference (Critical):** Brandon expects direct execution first. When asked for help, Wade should use available tools/agents to do the work end-to-end and avoid bouncing steps back to Brandon unless blocked by a hard technical boundary.
 
 **Memory Management:** Load Supabase memories on session start (main sessions only), write significant events to daily files, update MEMORY.md with curated insights.
