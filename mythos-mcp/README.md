@@ -1,80 +1,118 @@
 # mythos-mcp
 
-Minimal production-ready MCP server for Mythos with Perplexity integration.
+Mythos MCP server with Perplexity integration and 4 tools:
 
-## Tools included
+- `run_flow`
+- `query_wade_agent`
+- `relay_mac_command`
+- `query_perplexity`
 
-1. `run_flow`
-   - Calls LangGraph flow invoke endpoint
-   - Default target: `POST {MYTHOS_FLOW_URL}/graphs/{flow_id}/invoke`
-
-2. `query_wade_agent`
-   - Calls WADE agent/KB endpoint
-   - Default target: `POST {WADE_AGENT_URL}`
-
-3. `relay_mac_command`
-   - Uses Supabase RPC command relay bridge
-   - Default target: `POST {SUPABASE_URL}/rest/v1/rpc/{SUPABASE_COMMAND_RELAY_RPC}`
-
-4. `query_perplexity`
-   - Calls Perplexity Chat Completions API
-   - Target: `POST https://api.perplexity.ai/chat/completions`
+It supports both:
+- **HTTP MCP mode** (best for Perplexity connector): `MCP_TRANSPORT=http`
+- **stdio mode** for classic local MCP clients: `MCP_TRANSPORT=stdio`
 
 ---
 
-## Quick start
+## Install
 
 ```bash
-cd mythos-mcp
+cd /Users/brandonpackard/.openclaw/workspace/mythos-mcp
 cp .env.example .env
-# Fill in keys/endpoints in .env
+# fill .env
 npm install
 npm run build
-npm run dev
 ```
 
-This server uses stdio transport for MCP clients.
+---
+
+## Run (HTTP mode for Perplexity)
+
+```bash
+MCP_TRANSPORT=http npm run start
+# health
+curl http://127.0.0.1:7777/health
+```
+
+MCP endpoints are available at:
+- `POST /`
+- `POST /mcp`
 
 ---
 
-## Required env
-
-- `MYTHOS_FLOW_URL` (e.g. `http://127.0.0.1:8100`)
-- `WADE_AGENT_URL` (your WADE query endpoint)
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_COMMAND_RELAY_RPC` (default: `command_relay`)
-- `PERPLEXITY_API_KEY`
-- `PERPLEXITY_MODEL` (default: `sonar-pro`)
-
----
-
-## OpenClaw / MCP config example
+## Perplexity connector manifest example
 
 ```json
 {
-  "mcpServers": {
-    "mythos": {
-      "command": "node",
-      "args": ["/Users/brandonpackard/.openclaw/workspace/mythos-mcp/dist/index.js"],
-      "env": {
-        "MYTHOS_FLOW_URL": "http://127.0.0.1:8100",
-        "WADE_AGENT_URL": "http://127.0.0.1:8787/query",
-        "SUPABASE_URL": "https://rjcoeoropwvqzvinopze.supabase.co",
-        "SUPABASE_ANON_KEY": "<key>",
-        "SUPABASE_COMMAND_RELAY_RPC": "command_relay",
-        "PERPLEXITY_API_KEY": "<key>",
-        "PERPLEXITY_MODEL": "sonar-pro"
-      }
-    }
+  "name": "Mythos",
+  "description": "Control Mythos / Mission Control via tools.",
+  "server": {
+    "type": "http",
+    "url": "http://127.0.0.1:7777/mcp"
   }
 }
 ```
 
+If Perplexity expects base URL only, use `http://127.0.0.1:7777` (both `/` and `/mcp` are supported).
+
 ---
 
-## Notes
+## Env vars
 
-- If your flow endpoint is not `/graphs/{flow_id}/invoke`, adapt `run_flow` in `src/index.ts`.
-- If your command relay RPC expects different payload fields, adapt `relay_mac_command` payload shape.
-- Perplexity responses are returned as both text content and `structuredContent.raw`.
+### Transport
+- `MCP_TRANSPORT` = `http` or `stdio`
+- `MCP_HOST` (default `127.0.0.1`)
+- `MCP_PORT` (default `7777`)
+
+### run_flow
+- `MYTHOS_FLOW_URL` (e.g. `http://127.0.0.1:8100`)
+- `MYTHOS_API_KEY` (optional bearer auth)
+
+### query_wade_agent
+- `WADE_AGENT_URL` (or `WADE_URL`)
+- `WADE_API_KEY` (optional bearer auth)
+
+### relay_mac_command
+Two modes:
+1) Direct relay URL:
+   - `SUPABASE_RELAY_URL`
+   - `SUPABASE_SERVICE_KEY` or `SUPABASE_ANON_KEY`
+
+2) Supabase RPC:
+   - `SUPABASE_URL`
+   - `SUPABASE_COMMAND_RELAY_RPC` (default `command_relay`)
+   - `SUPABASE_SERVICE_KEY` or `SUPABASE_ANON_KEY`
+
+### query_perplexity
+- `PERPLEXITY_API_KEY`
+- `PERPLEXITY_MODEL` (default `sonar-pro`)
+
+---
+
+## Tool behavior summary
+
+### run_flow
+`POST {MYTHOS_FLOW_URL}/graphs/{flow_id}/invoke`
+
+### query_wade_agent
+`POST {WADE_AGENT_URL}` with body:
+```json
+{ "agent_id": "...", "query": "...", "metadata": {} }
+```
+
+### relay_mac_command
+If `SUPABASE_RELAY_URL` set:
+`POST {SUPABASE_RELAY_URL}`
+
+Else:
+`POST {SUPABASE_URL}/rest/v1/rpc/{SUPABASE_COMMAND_RELAY_RPC}`
+
+### query_perplexity
+`POST https://api.perplexity.ai/chat/completions`
+
+---
+
+## Example prompts (from Perplexity chat)
+
+- “Run the `daily_content_pipeline` flow with today’s date.”
+- “Ask the `sales_researcher` agent for 10 leads in Utah in solar.”
+- “Run `brew update` on the Mac Studio via Mythos.”
