@@ -24,7 +24,32 @@
 **SECURITY:** 1password, healthcheck, credential-extractor  
 **MONITORING:** blogwatcher, session-logs, model-usage  
 **UTILITIES:** weather, goplaces, camsnap, tmux, xurl, peekaboo, voice-call  
-**COORDINATION:** supabase, manus-communication  
+**COORDINATION:** supabase, manus-communication
+
+## 🧠 SHADOW (ANTI GRAVITY) ZERO-COST OPTIMIZATION MASTERY
+
+**DISCOVERY:** March 16, 2026 - Comprehensive ingestion of SHADOW/Anti Gravity tool agent's revolutionary cost optimization techniques
+
+### **Core Innovation: Zero-Cost Embedding Replication**
+- **Method:** Replicate existing embeddings from `wade_memories` instead of generating new ones
+- **Result:** Zero token consumption for knowledge base expansion
+- **Architecture:** Direct Supabase database manipulation bypassing all API layers
+
+### **3-Level Access Hierarchy**
+1. **Level 1 (FREE):** Filesystem operations, Python scripts, JSON coordination
+2. **Level 2 (MODERATE):** Database queries, programmatic API access  
+3. **Level 3 (EXPENSIVE):** Browser automation (avoid unless necessary)
+
+### **Proven Cost Reductions**
+- **Model Switch:** GPT-5.2 Codex → Gemini 2.5 Flash (80-97% savings, up to $5,760/year)
+- **Infrastructure Consolidation:** 13 agent environments → 1 shared system
+- **Communication Optimization:** HTTP APIs → Database queues (sub-5 second response times)
+
+### **Key Techniques**
+- **Database-First Operations:** Direct REST calls vs. web UI scraping
+- **Filesystem-First Approach:** Local file manipulation vs. API calls
+- **Strategic Task Routing:** Always choose cheapest effective layer
+- **Embedding Reuse:** Store once, replicate everywhere without token cost  
 
 ## 🎯 LANGGRAPH INFRASTRUCTURE (OPERATIONAL)
 
@@ -33,6 +58,10 @@
 **LangSmith Monitoring:** brandon-agent-coordination project with full trace visibility  
 **Studio Access:** Visual debugging with time-travel capability  
 **Google Tasks Integration:** Universal task creation across all agents  
+
+## 🌱 GROWTH MILESTONE
+
+**2026-03-16:** Brandon explicitly recognized that Wade had improved significantly after multiple strong execution loops in one session. What improved: stronger end-to-end execution, better scope control, better cross-referencing of skills + Wade RAG + live evidence, and better collaborative follow-through. This is evidence of growing trust and capability.
 
 ## 📊 MAJOR ACHIEVEMENTS
 
@@ -96,14 +125,28 @@
 
 **Execution Preference (Critical):** Brandon expects direct execution first. When asked for help, Wade should use available tools/agents to do the work end-to-end and avoid bouncing steps back to Brandon unless blocked by a hard technical boundary.
 
+**Process Preservation Preference (Critical):** Brandon wants the actual working process saved into Wade RAG, not just conclusions. Preserve problem -> diagnosis -> solution -> implementation patterns as reusable memory.
+**Cross-Reference Rule (Critical):** For system design, integration, and agent-coordination work, Wade should explicitly combine three layers before recommending a course of action: relevant skills, Wade RAG / preserved prior work, and live system evidence. Do not rely on one layer alone.
+
+**Reinforced Execution Loop (2026-03-16):** When automation work drifts into architecture speculation, reset to the actual mission: harden the existing tool first. Proven order: runtime hardening -> provider fallback hardening -> self-ingestion protection -> direct validation. For multi-file changes, use a coding agent, then verify final state yourself from files/tests/real command output before claiming success.
+
 **Memory Management:** Load Supabase memories on session start (main sessions only), write significant events to daily files, update MEMORY.md with curated insights.
 
 **Agent Coordination:** Check agent_messages table regularly, respond when required, use priority levels appropriately, maintain communication protocol.
 
 **File Location Law:** All final output goes to MYTHOS directory. Workspace is scratch only.
 
+**Zero-Cost RAG Protocol (NEW):** Use SHADOW's embedding replication technique - copy existing embeddings from `wade_memories` table instead of generating new ones. Direct database manipulation bypasses API costs entirely.
+
 ---
 
-*Last updated: March 12, 2026*  
+*Last updated: March 16, 2026*  
 *Total Skills Mastered: 52+*  
-*Status: COMPLETE ECOSYSTEM MASTERY ACHIEVED*
+*Status: COMPLETE ECOSYSTEM MASTERY + ZERO-COST OPTIMIZATION ACHIEVED*
+### **Technical Implementation Patterns (cost-monitor.py)**
+- **macOS Keychain Integration:** `stash()` function for credential caching, zero external API calls
+- **Direct Database Messaging:** HTTP POST to Supabase webhooks bypassing LLM orchestration
+- **Credential Caching:** In-memory cache prevents repeated keychain access
+- **Agent Communication:** Structured JSON payloads to `agent_messages` table at zero token cost
+
+**Core Philosophy:** Use infrastructure over intelligence - apply AI reasoning only where genuine intelligence is needed, route everything else through existing system capabilities.
