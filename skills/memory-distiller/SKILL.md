@@ -32,3 +32,15 @@ It targets recent rows that are likely to pollute startup context.
 - Do not rewrite old evergreen identity or preference memories unless they become recent inputs again.
 - Always back up the original row content before patching.
 - Launch cadence belongs in `launchd`, not in a custom infinite loop.
+
+## Verification
+
+- `launchctl print gui/$(id -u)/com.wade.memory-distiller`
+- `tail -n 20 ~/.openclaw/logs/memory-distiller.log`
+- `python3 ~/.openclaw/workspace/skills/memory-distiller/read_mythos_status.py`
+
+## Recovery
+
+- back up originals live in `backups/YYYY-MM-DD.jsonl`
+- state tracking lives in `state.json`
+- reinstall the agent with `bash install_launch_agent.sh`

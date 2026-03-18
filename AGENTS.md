@@ -16,6 +16,16 @@ Before doing anything else:
 Do not read `~/command-center/STATUS.md` at boot by default.
 Use `python3 ~/.openclaw/workspace/skills/memory-distiller/read_mythos_status.py` only when Brandon explicitly asks about systems, status, health, blockers, or infrastructure state.
 
+Bridge check before trusting the boot lane:
+- `launchctl print gui/$(id -u)/com.wade.memory-distiller`
+- `tail -n 20 ~/.openclaw/logs/memory-distiller.log`
+- `python3 ~/.openclaw/workspace/skills/memory-distiller/read_mythos_status.py`
+
+If the bridge needs repair:
+- code lives in `~/.openclaw/workspace/skills/memory-distiller/`
+- original rows are backed up in `~/.openclaw/workspace/skills/memory-distiller/backups/`
+- install or restart with `bash ~/.openclaw/workspace/skills/memory-distiller/install_launch_agent.sh`
+
 Don't ask permission. Just do it.
 
 ## Database & Session Hooks (The Boot Architecture)

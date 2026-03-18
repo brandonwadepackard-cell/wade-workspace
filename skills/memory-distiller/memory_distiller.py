@@ -234,9 +234,13 @@ def process_memories(limit: int, hours: int, apply_changes: bool, verbose: bool)
 
     for memory in memories:
         memory_id = memory["id"]
-        original = memory.get("content", "")
-        original_hash = content_hash(original)
-        if processed.get(memory_id, {}).get("original_hash") == original_hash:
+        content = memory.get("content", "")
+        current_hash = content_hash(content)
+        prior = processed.get(memory_id, {})
+        if current_hash in {
+            prior.get("original_hash"),
+            prior.get("distilled_hash"),
+        }:
             continue
         if not should_distill(memory):
             continue
@@ -244,10 +248,10 @@ def process_memories(limit: int, hours: int, apply_changes: bool, verbose: bool)
         if verbose:
             print(f"candidate {memory_id} importance={memory.get('importance')} score={technical_score(memory)}")
 
-        distilled = distill_with_gemini(original, gemini_key)
+        distilled = distill_with_gemini(content, gemini_key)
         if apply_changes:
             processed[memory_id] = {
-                "original_hash": original_hash,
+                "original_hash": current_hash,
                 "distilled_hash": content_hash(distilled),
                 "processed_at": datetime.now(timezone.utc).isoformat(),
                 "mode": "apply",
