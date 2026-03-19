@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -16,9 +17,12 @@ from pathlib import Path
 
 SUPABASE_URL = "https://rjcoeoropwvqzvinopze.supabase.co"
 GEMINI_MODEL = "gemini-2.5-flash"
+VERSION = "2026-03-18-hardened-2"
 STATE_PATH = Path("/Users/brandonpackard/.openclaw/workspace/skills/memory-distiller/state.json")
 BACKUP_DIR = Path("/Users/brandonpackard/.openclaw/workspace/skills/memory-distiller/backups")
 LOG_PATH = Path("/Users/brandonpackard/.openclaw/logs/memory-distiller.log")
+LOCK_PATH = Path("/Users/brandonpackard/.openclaw/workspace/skills/memory-distiller/memory_distiller.lock")
+ERROR_COOLDOWN_HOURS = 6
 
 TECH_PATTERNS = [
     r"`[^`]+`",
@@ -59,16 +63,19 @@ ALLOWED_TYPES = {
 
 
 def get_stash(label: str) -> str:
-    cmd = [
-        "security",
-        "find-generic-password",
-        "-a",
-        "brandonpackard",
-        "-s",
-        f"stash.{label}",
-        "-w",
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            "security",
+            "find-generic-password",
+            "-a",
+            "brandonpackard",
+            "-s",
+            f"stash.{label}",
+            "-w",
+        ],
+        capture_output=True,
+        text=True,
+    )
     if result.returncode != 0:
         raise RuntimeError(f"missing stash key: {label}")
     return result.stdout.strip()
@@ -81,28 +88,48 @@ def ensure_dirs() -> None:
 
 def log(message: str) -> None:
     ensure_dirs()
-    timestamp = datetime.now(timezone.utc).isoformat()
-    with LOG_PATH.open("a") as handle:
+    timestamp = utc_now().isoformat()
+    with LOG_PATH.open("a", encoding="utf-8") as handle:
         handle.write(f"{timestamp} {message}\n")
 
 
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def load_state() -> dict:
-    if STATE_PATH.exists():
-        try:
-            return json.loads(STATE_PATH.read_text())
-        except Exception:
-            pass
-    return {"processed": {}}
+    if not STATE_PATH.exists():
+        return {"processed": {}}
+    try:
+        return json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        log("state-load-error resetting processed state")
+        return {"processed": {}}
 
 
 def save_state(state: dict) -> None:
     ensure_dirs()
-    STATE_PATH.write_text(json.dumps(state, indent=2, sort_keys=True))
+    temp_path = STATE_PATH.with_suffix(".json.tmp")
+    temp_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+    temp_path.replace(STATE_PATH)
 
 
 def recent_cutoff(hours: int) -> str:
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    cutoff = utc_now() - timedelta(hours=hours)
     return cutoff.isoformat()
+
+
+def acquire_lock() -> object | None:
+    ensure_dirs()
+    handle = LOCK_PATH.open("w", encoding="utf-8")
+    try:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        handle.close()
+        return None
+    handle.write(f"{utc_now().isoformat()} pid={os.getpid()}\n")
+    handle.flush()
+    return handle
 
 
 def fetch_recent_memories(limit: int, hours: int, anon_key: str) -> list[dict]:
@@ -121,7 +148,7 @@ def fetch_recent_memories(limit: int, hours: int, anon_key: str) -> list[dict]:
         },
     )
     with urllib.request.urlopen(request, timeout=20) as response:
-        return json.loads(response.read().decode())
+        return json.loads(response.read().decode("utf-8"))
 
 
 def content_hash(text: str) -> str:
@@ -139,7 +166,13 @@ def technical_score(memory: dict) -> int:
         score += 2
     if len(text) > 1200:
         score += 2
-    if memory.get("memory_type") in {"achievement", "knowledge", "architectural_blueprint", "teachable_skill", "optimization_strategy"}:
+    if memory.get("memory_type") in {
+        "achievement",
+        "knowledge",
+        "architectural_blueprint",
+        "teachable_skill",
+        "optimization_strategy",
+    }:
         score += 1
     return score
 
@@ -172,7 +205,7 @@ def backup_memory(memory: dict) -> None:
     ensure_dirs()
     date_key = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     backup_path = BACKUP_DIR / f"{date_key}.jsonl"
-    with backup_path.open("a") as handle:
+    with backup_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(memory, ensure_ascii=True) + "\n")
 
 
@@ -201,8 +234,16 @@ def distill_with_gemini(content: str, gemini_key: str) -> str:
         headers={"Content-Type": "application/json"},
     )
     with urllib.request.urlopen(request, timeout=45) as response:
-        body = json.loads(response.read().decode())
-    return body["candidates"][0]["content"]["parts"][0]["text"].strip()
+        body = json.loads(response.read().decode("utf-8"))
+    candidates = body.get("candidates") or []
+    if not candidates:
+        raise RuntimeError(f"gemini-empty-candidates {body!r}")
+    parts = candidates[0].get("content", {}).get("parts") or []
+    texts = [part.get("text", "").strip() for part in parts if isinstance(part, dict)]
+    distilled = "\n".join(text for text in texts if text).strip()
+    if not distilled:
+        raise RuntimeError(f"gemini-empty-text {body!r}")
+    return distilled
 
 
 def patch_memory(memory_id: str, new_content: str, service_role_key: str) -> None:
@@ -222,50 +263,117 @@ def patch_memory(memory_id: str, new_content: str, service_role_key: str) -> Non
         return
 
 
-def process_memories(limit: int, hours: int, apply_changes: bool, verbose: bool) -> int:
+def parse_iso8601(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def should_back_off(prior: dict, current_hash: str) -> bool:
+    if prior.get("original_hash") != current_hash:
+        return False
+    if prior.get("mode") != "error":
+        return False
+    last_error_at = parse_iso8601(prior.get("processed_at"))
+    if last_error_at is None:
+        return False
+    return utc_now() - last_error_at < timedelta(hours=ERROR_COOLDOWN_HOURS)
+
+
+def process_memories(
+    limit: int,
+    hours: int,
+    apply_changes: bool,
+    verbose: bool,
+    reprocess_processed: bool,
+) -> int:
     anon_key = get_stash("supabase-primary-anon")
     gemini_key = get_stash("gemini-api-key")
-    service_role_key = get_stash("supabase-primary-service-role")
+    service_role_key = get_stash("supabase-primary-service-role") if apply_changes else ""
     state = load_state()
     processed = state.setdefault("processed", {})
 
     memories = fetch_recent_memories(limit, hours, anon_key)
     changed = 0
+    candidates = 0
+    log(
+        f"scan-start version={VERSION} mode={'apply' if apply_changes else 'dry-run'} "
+        f"limit={limit} hours={hours} rows={len(memories)}"
+    )
 
     for memory in memories:
         memory_id = memory["id"]
         content = memory.get("content", "")
         current_hash = content_hash(content)
         prior = processed.get(memory_id, {})
-        if current_hash in {
-            prior.get("original_hash"),
-            prior.get("distilled_hash"),
-        }:
+        if should_back_off(prior, current_hash):
+            if verbose:
+                print(f"cooldown {memory_id} last_error_at={prior.get('processed_at')}")
+            continue
+        if apply_changes and prior.get("mode") == "apply" and not reprocess_processed:
+            if verbose:
+                print(f"skip {memory_id} already processed at {prior.get('processed_at')}")
+            continue
+        if current_hash in {prior.get("original_hash"), prior.get("distilled_hash")}:
             continue
         if not should_distill(memory):
             continue
 
+        candidates += 1
         if verbose:
-            print(f"candidate {memory_id} importance={memory.get('importance')} score={technical_score(memory)}")
+            print(
+                f"candidate {memory_id} importance={memory.get('importance')} "
+                f"score={technical_score(memory)} markers={execution_marker_score(content)}"
+            )
 
-        distilled = distill_with_gemini(content, gemini_key)
-        if apply_changes:
+        try:
+            distilled = distill_with_gemini(content, gemini_key)
+            distilled_hash = content_hash(distilled)
+            if apply_changes:
+                if distilled_hash == current_hash:
+                    processed[memory_id] = {
+                        "original_hash": current_hash,
+                        "distilled_hash": distilled_hash,
+                        "processed_at": utc_now().isoformat(),
+                        "mode": "noop",
+                    }
+                    log(f"no-op {memory_id}")
+                    continue
+
+                backup_memory(memory)
+                patch_memory(memory_id, distilled, service_role_key)
+                processed[memory_id] = {
+                    "original_hash": current_hash,
+                    "distilled_hash": distilled_hash,
+                    "processed_at": utc_now().isoformat(),
+                    "mode": "apply",
+                }
+                changed += 1
+                log(f"patched {memory_id}")
+            else:
+                print(f"--- {memory_id} ---")
+                print(distilled[:1200])
+                print()
+        except Exception as exc:
             processed[memory_id] = {
                 "original_hash": current_hash,
-                "distilled_hash": content_hash(distilled),
-                "processed_at": datetime.now(timezone.utc).isoformat(),
-                "mode": "apply",
+                "distilled_hash": prior.get("distilled_hash"),
+                "processed_at": utc_now().isoformat(),
+                "mode": "error",
+                "error": str(exc)[:500],
             }
-            backup_memory(memory)
-            patch_memory(memory_id, distilled, service_role_key)
-            changed += 1
-            log(f"patched {memory_id}")
-        else:
-            print(f"--- {memory_id} ---")
-            print(distilled[:1200])
-            print()
+            log(f"error {memory_id} {exc}")
+            if verbose:
+                print(f"error {memory_id}: {exc}", file=sys.stderr)
 
     save_state(state)
+    log(
+        f"scan-complete version={VERSION} mode={'apply' if apply_changes else 'dry-run'} "
+        f"candidates={candidates} changed={changed}"
+    )
     return changed
 
 
@@ -274,10 +382,30 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="Patch qualifying memories")
     parser.add_argument("--limit", type=int, default=20, help="Recent row limit")
     parser.add_argument("--hours", type=int, default=72, help="Recent window in hours")
-    parser.add_argument("--verbose", action="store_true", help="Print candidates")
+    parser.add_argument("--verbose", action="store_true", help="Print candidate diagnostics")
+    parser.add_argument(
+        "--reprocess-processed",
+        action="store_true",
+        help="Allow rows already marked as applied in state.json to be reconsidered",
+    )
     args = parser.parse_args()
 
-    changed = process_memories(args.limit, args.hours, args.apply, args.verbose)
+    lock_handle = acquire_lock()
+    if lock_handle is None:
+        log("lock-busy exiting")
+        print("memory-distiller skipped: another run is active")
+        return 0
+
+    try:
+        changed = process_memories(
+            args.limit,
+            args.hours,
+            args.apply,
+            args.verbose,
+            args.reprocess_processed,
+        )
+    finally:
+        lock_handle.close()
     mode = "apply" if args.apply else "dry-run"
     print(f"memory-distiller complete mode={mode} changed={changed}")
     return 0
