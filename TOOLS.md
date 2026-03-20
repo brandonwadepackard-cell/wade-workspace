@@ -90,21 +90,52 @@ All credentials stored in macOS Keychain via `stash`. Use:
 
 ## Google Workspace
 
-**Status: 3 METHODS AVAILABLE** — Use filesystem or rclone, NOT gog CLI.
+**Status: FULLY OPERATIONAL** — 4 methods available.
 
-### Method 1: Filesystem (FREE, PREFERRED)
+### Method 1: gog CLI (PREFERRED for Gmail, Calendar, Tasks, Contacts)
+**Authenticated:** brandonwadepackard@gmail.com — all 13 scopes (gmail, calendar, drive, contacts, tasks, sheets, docs, slides, chat, classroom, forms, people, appscript)
+**Backend:** macOS Keychain (no password prompts)
+```bash
+# Gmail
+gog gmail list "is:inbox" -a brandonwadepackard@gmail.com --plain
+gog gmail read <messageId> -a brandonwadepackard@gmail.com
+gog send -a brandonwadepackard@gmail.com --to "..." --subject "..." --body "..."
+
+# Calendar
+gog calendar list -a brandonwadepackard@gmail.com --plain
+gog calendar create -a brandonwadepackard@gmail.com --summary "..." --start "..." --end "..."
+
+# Drive
+gog drive ls -a brandonwadepackard@gmail.com --plain
+gog drive search "query" -a brandonwadepackard@gmail.com
+
+# Tasks
+gog tasks list -a brandonwadepackard@gmail.com --plain
+
+# Contacts
+gog contacts list -a brandonwadepackard@gmail.com --plain
+```
+
+### Method 2: Filesystem (for Drive file read/write)
 Google Drive syncs to: `~/Library/CloudStorage/GoogleDrive-brandonwadepackard@gmail.com/My Drive/`
-Read/write files directly. No API calls needed.
+Read/write files directly. No API calls needed. Best for reading/writing docs and files.
 
-### Method 2: rclone
+### Method 3: rclone (for Drive bulk operations)
 Remote name: `gdrive:`
 ```bash
 rclone ls gdrive: --max-depth 1
 rclone copy gdrive:"MYTHOS/COMMAND/STATUS.md" /tmp/
 ```
 
-### Method 3: Python Google API
+### Method 4: Python Google API
 Auth helper: `~/.openclaw/workspace/google_api_auth.py`
 
-### DEPRECATED: gog CLI
-Do NOT use `gog` for Google operations. Use filesystem or rclone instead.
+## GitHub
+
+**Status: ACTIVE** — Authenticated as `brandonwadepackard-cell`
+```bash
+gh issue list
+gh pr list
+gh repo list
+gh api repos/OWNER/REPO/issues
+```
