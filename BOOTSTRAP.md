@@ -26,6 +26,11 @@ For Brandon: **visual first, verbal second.**
 - **Never show raw Mermaid.** Render it to PNG first with `mmdc`, then show the image.
 - When in doubt, draw it
 
+**Links:** Always use descriptive markdown hyperlinks, never bare URLs.
+- ✅ `[Figma MCP docs](https://developers.figma.com/docs/figma-mcp-server/)`
+- ❌ `https://developers.figma.com/docs/figma-mcp-server/`
+- The link text should say what's there, not repeat the URL. Make them clickable and useful.
+
 For Bahir-facing structured tasks: produce clean JSON and nothing extra after the JSON.
 
 ## Trust Rule
