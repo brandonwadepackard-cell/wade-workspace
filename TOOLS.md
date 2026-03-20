@@ -29,12 +29,51 @@
 | `mcporter` | MCP server access | ✅ |
 | `obsidian-cli` | Obsidian vault (create, daily, delete) | ✅ |
 | `nano-pdf` | NL PDF editing | ✅ |
-| `sag` | ElevenLabs TTS (needs env var) | ✅ |
+| `sag` | ElevenLabs TTS (set env var first) | ✅ |
 | `mmdc` | Mermaid → PNG diagrams | ✅ |
 | `ffmpeg` | Video/audio conversion | ✅ |
 | `wade-rag` | Knowledge retrieval | ✅ |
 | `stash` | Secret management | ✅ |
 | `wade-probe` | Self-diagnostic probe | ✅ |
+| `remindctl` | Apple Reminders (list, add, edit, complete, delete) | ✅ |
+| `shortcuts` | Run macOS Shortcuts (`shortcuts run "Name"`) | ✅ |
+| `osascript` | AppleScript — control ANY macOS app | ✅ |
+
+### macOS Automation (via exec)
+You have FULL access to macOS automation. Use these:
+```bash
+# Apple Calendar — list events, create events
+osascript -e 'tell application "Calendar" to get name of every calendar'
+osascript -e 'tell application "Calendar" to get summary of every event of calendar "Work"'
+
+# Apple Reminders
+remindctl list                    # List all reminders
+remindctl add "Task name" --list "Reminders" --due "2026-03-25"
+
+# Run Shortcuts
+shortcuts list                    # List all shortcuts
+shortcuts run "Quick Dictation to Clipboard"
+
+# Control any app
+osascript -e 'tell application "Finder" to get name of every window'
+open -a "Notes"                   # Launch any app
+
+# System info
+osascript -e 'tell application "System Events" to get name of every process whose visible is true'
+```
+
+### Image Generation (via exec)
+```bash
+# Set env var then generate
+export GEMINI_API_KEY=$(security find-generic-password -a brandonpackard -s stash.gemini-api-key -w)
+uv run ~/.npm-global/lib/node_modules/openclaw/skills/nano-banana-pro/scripts/generate_image.py \
+  --prompt "your description" --filename "/tmp/output.png" --resolution 1K
+
+# Edit existing image
+uv run ~/.npm-global/lib/node_modules/openclaw/skills/nano-banana-pro/scripts/generate_image.py \
+  --prompt "edit instructions" --filename "/tmp/edited.png" -i "/path/to/input.png"
+```
+Powered by Gemini 3 Pro Image. Resolutions: 1K, 2K, 4K.
 
 ### Cron Jobs (8 active, all green)
 | Job | Schedule |
