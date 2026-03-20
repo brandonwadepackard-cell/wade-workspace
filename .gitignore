@@ -21,3 +21,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.logskills/_archived_shadow_era/credential-extractor/
+skills/wade-cdp-bridge/.venv/
+__pycache__/
+*.pyc
