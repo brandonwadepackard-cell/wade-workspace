@@ -139,3 +139,35 @@ gh pr list
 gh repo list
 gh api repos/OWNER/REPO/issues
 ```
+
+## MCP Server Access (mcporter)
+
+**Status: ACTIVE** — v0.7.3
+```bash
+mcporter list                              # List configured servers
+mcporter call <server>.<method> [params]   # Call an MCP tool
+```
+
+## Obsidian Vault (obsidian-cli)
+
+**Status: ACTIVE** — Vault at `~/Documents/THE TRUE MYTHOS/`
+```bash
+obsidian-cli search "query" --vault ~/Documents/THE\ TRUE\ MYTHOS/
+obsidian-cli create "Note Title" --vault ~/Documents/THE\ TRUE\ MYTHOS/
+```
+
+## PDF Editing (nano-pdf)
+
+**Status: ACTIVE** — NL PDF editing
+```bash
+nano-pdf edit document.pdf 1 "Change the title to 'New Title'"
+```
+
+## ElevenLabs TTS (sag)
+
+**Status: ACTIVE** — Requires API key env var
+```bash
+ELEVENLABS_API_KEY=$(security find-generic-password -a brandonpackard -s stash.elevenlabs-api-key -w)
+sag speak "Hello Brandon" --voice Roger
+sag voices
+```
