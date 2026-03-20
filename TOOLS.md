@@ -1,6 +1,22 @@
 # TOOLS.md - Local Notes
 
+> **See also: `CAPABILITIES.md`** — the verified, tested tool manifest.
+> CAPABILITIES.md is the authoritative source for what works.
+> This file contains additional configuration details.
+
 Skills define _how_ tools work. This file is for _your_ specifics.
+
+## Web Search & Fetch (Brave)
+
+**Status: ACTIVE** — configured in `openclaw.json` under `tools.web`.
+
+- **Provider:** Brave Search API
+- **Tools available:** `web_search` (search the web) and `web_fetch` (fetch a URL's content)
+- **Config location:** `tools.web.search` and `tools.web.fetch` in `~/.openclaw/openclaw.json`
+
+Use these tools when Brandon asks you to look something up, research a topic, check a URL, or get current information. You have full web access.
+
+**Schema note:** The correct config keys are `tools.web.search` and `tools.web.fetch` (nested under `web`). NOT `tools.web_search` / `tools.web_fetch` (underscore format is invalid and will break the config).
 
 ## Supabase
 
@@ -8,57 +24,87 @@ Two active projects. **Use the anon JWT key** for REST API calls — the `sb_pub
 
 ### brandonwadepackard-cell (primary — memory/identity)
 - **URL:** `https://rjcoeoropwvqzvinopze.supabase.co`
-- **Service role key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqY29lb3JvcHd2cXp2aW5vcHplIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzY3NjQ1NSwiZXhwIjoyMDc5MjUyNDU1fQ.nShbHUWGKorYP9u8FTyYIROFBSNbDfj7nREHUFeWKr0`
+- **Anon key:** retrieve via `stash get supabase-primary-anon`
 - See `skills/supabase/SKILL.md` for full curl examples
 
 ### make-a-million (game project)
 - **URL:** `https://shfygoaslyinjcvmgels.supabase.co`
-- **Anon key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZnlnb2FzbHlpbmpjdm1nZWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NDUyODgsImV4cCI6MjA4NjEyMTI4OH0.OGDOSARbkc2g_4c4oEHDK4hBmtly7FlwYiUEDcJhOrI`
+- **Anon key:** retrieve via `stash get supabase-make-a-million-anon`
 - See `skills/supabase/SKILL.md` for full curl examples
 
 ### MCP Note
-The file `~/.openclaw/mcp-servers.json` exists but OpenClaw does NOT load it. OpenClaw uses `mcporter` for MCP servers, which is separate. The Supabase MCP requires browser-based OAuth login that hasn't been set up. **Use the curl REST API approach above — it works.**
+The file `~/.openclaw/mcp-servers.json` exists but OpenClaw does NOT load it. OpenClaw uses `mcporter` for MCP servers, which is separate. **Use the curl REST API approach above — it works.**
 
-## Google Workspace (gog)
+## Mountain America Credit Union (MACU) → Stripe Integration
 
-**Status: AUTHENTICATED** — ready to use.
+**Status: READY FOR SETUP** — Scripts and documentation created.
 
-- **Binary:** `/opt/homebrew/bin/gog`
-- **Account:** `brandonwadepackard@gmail.com`
-- **Services:** gmail, calendar, drive, contacts, docs, sheets
-- **Keyring:** file backend at `~/Library/Application Support/gogcli/keyring/`
+- **Bank:** Mountain America Credit Union
+- **Setup Script:** `connect_macu_to_stripe.sh`
+- **Documentation:** `MACU_STRIPE_INTEGRATION.md`
+- **Stripe Dashboard:** https://dashboard.stripe.com/settings/banking
 
-### How to call gog
+### How to Connect
+1. **Run setup script:** `./connect_macu_to_stripe.sh`
+2. **Or manual:** Stripe Dashboard → Settings → Banking → Add bank account
+3. **Verify:** Wait for micro-deposits (1-2 business days)
 
-**ALWAYS set both env vars inline.** OpenClaw does not source `~/.zshrc`.
+## Flexx Fiber Voice Agent (PRODUCTION READY)
 
+**Status: READY FOR DEPLOYMENT** — All credentials verified and configured.
+
+### Credential Access
+All credentials stored in macOS Keychain via `stash`. Use:
+- `stash get twilio-account-sid`
+- `stash get twilio-api-key`
+- `stash get anthropic-api-key`
+- `stash get openai-api-key`
+
+**NEVER hardcode credentials in this file.** Always retrieve from stash at runtime.
+
+### Deployment
 ```bash
-GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog <command>
+# Load credentials from vault
+./credential_manager.sh load
+
+# Test credentials work
+./credential_manager.sh test
 ```
 
-### Examples
+## Whisper AI MCP Integration
 
+**Status: CONFIGURED** — Ready to use with Claude desktop app.
+
+- **MCP Token:** retrieve via `stash get whisper-mcp-token` (if saved) or check `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+### How to Use
+1. Open Claude desktop app
+2. Upload audio/video files directly in chat
+3. Paste social media links (YouTube, TikTok, Instagram, etc.)
+4. Ask Claude to transcribe using Whisper AI
+
+### Supported Formats
+- Audio: mp3, wav, m4a, etc.
+- Video: mp4, etc.
+- Social media: YouTube, VK, Instagram, TikTok, RuTube links
+
+## Google Workspace
+
+**Status: 3 METHODS AVAILABLE** — Use filesystem or rclone, NOT gog CLI.
+
+### Method 1: Filesystem (FREE, PREFERRED)
+Google Drive syncs to: `~/Library/CloudStorage/GoogleDrive-brandonwadepackard@gmail.com/My Drive/`
+Read/write files directly. No API calls needed.
+
+### Method 2: rclone
+Remote name: `gdrive:`
 ```bash
-# List recent emails
-GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog gmail search 'newer_than:1d' --max 10
-
-# Read a specific email
-GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog gmail read <messageId>
-
-# List calendar events
-GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog calendar events primary --from $(date -u +%Y-%m-%dT00:00:00Z)
-
-# List Drive files
-GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog drive search "name contains 'project'" --max 10
-
-# Verify auth works
-GOG_KEYRING_PASSWORD="wade" GOG_ACCOUNT="brandonwadepackard@gmail.com" gog auth list
+rclone ls gdrive: --max-depth 1
+rclone copy gdrive:"MYTHOS/COMMAND/STATUS.md" /tmp/
 ```
 
-### If auth is ever lost
-Re-run (Brandon does this once in terminal — browser window required):
-```bash
-rm -rf "$HOME/Library/Application Support/gogcli/keyring"
-gog auth add brandonwadepackard@gmail.com --services gmail,calendar,drive,contacts,docs,sheets
-# Enter passphrase when prompted: wade
-```
+### Method 3: Python Google API
+Auth helper: `~/.openclaw/workspace/google_api_auth.py`
+
+### DEPRECATED: gog CLI
+Do NOT use `gog` for Google operations. Use filesystem or rclone instead.
