@@ -27,7 +27,7 @@
 | `gh` | GitHub issues, PRs, repos | ✅ brandonwadepackard-cell |
 | `himalaya` | Email client | ✅ |
 | `mcporter` | MCP server access | ✅ |
-| `obsidian-cli` | Obsidian vault automation | ✅ |
+| `obsidian-cli` | Obsidian vault (create, daily, delete) | ✅ |
 | `nano-pdf` | NL PDF editing | ✅ |
 | `sag` | ElevenLabs TTS (needs env var) | ✅ |
 | `mmdc` | Mermaid → PNG diagrams | ✅ |
@@ -202,9 +202,12 @@ mcporter call <server>.<method> [params]   # Call an MCP tool
 ## Obsidian Vault (obsidian-cli)
 
 **Status: ACTIVE** — Vault at `~/Documents/THE TRUE MYTHOS/`
+Commands: `create`, `daily`, `delete` (NO search command — use `grep` via exec for vault search)
 ```bash
-obsidian-cli search "query" --vault ~/Documents/THE\ TRUE\ MYTHOS/
 obsidian-cli create "Note Title" --vault ~/Documents/THE\ TRUE\ MYTHOS/
+obsidian-cli daily --vault ~/Documents/THE\ TRUE\ MYTHOS/
+# For search, use exec:
+grep -rli "query" ~/Documents/THE\ TRUE\ MYTHOS/ --include="*.md" | head -10
 ```
 
 ## PDF Editing (nano-pdf)
