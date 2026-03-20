@@ -77,7 +77,7 @@ Returns JSON: service health, table counts, registry status, memory health, stas
 ```
 **Requires:** Chrome launched with `--remote-debugging-port=9222`. Not always available.
 
-### Google Workspace (gog CLI) — REQUIRES ONE-TIME AUTH
+### Google Workspace (gog CLI) — ✅ AUTHENTICATED
 ```bash
 # Gmail
 gog gmail list --account brandonwadepackard@gmail.com       # List inbox
@@ -100,7 +100,7 @@ gog contacts list -a brandonwadepackard@gmail.com           # List contacts
 # Tasks
 gog tasks list -a brandonwadepackard@gmail.com              # List tasks
 ```
-**Auth:** `gog login brandonwadepackard@gmail.com` (Brandon must run once — opens browser for OAuth)
+**Auth:** ✅ Completed 2026-03-20. Token in macOS Keychain (service: `gogcli`). Survives restarts.
 **Backend:** macOS Keychain (no password prompts)
 Binary: `/opt/homebrew/bin/gog` (v0.11.0)
 
@@ -144,7 +144,7 @@ Binaries: `/opt/homebrew/bin/ffmpeg`, `/Users/brandonpackard/.npm-global/bin/mmd
 - **MCP servers** — `mcp-servers.json` is NOT loaded by OpenClaw. The 9 server definitions are decorative.
 - **Autonomous loops** — disabled in HEARTBEAT.md. Wade cannot self-trigger actions.
 - **Agent messaging (push)** — Wade can write to agent_messages via curl, but has no push notification. Must poll.
-- **gog (Google)** — CLI installed, keychain backend configured. Needs `gog login` OAuth flow (Brandon must run once).
+- **gog (Google)** — ✅ Fully operational. 13 scopes. Token in Keychain.
 
 ## Verification Commands
 
