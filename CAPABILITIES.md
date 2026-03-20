@@ -77,12 +77,74 @@ Returns JSON: service health, table counts, registry status, memory health, stas
 ```
 **Requires:** Chrome launched with `--remote-debugging-port=9222`. Not always available.
 
+### Google Workspace (gog CLI) — REQUIRES ONE-TIME AUTH
+```bash
+# Gmail
+gog gmail list --account brandonwadepackard@gmail.com       # List inbox
+gog gmail read <messageId> -a brandonwadepackard@gmail.com  # Read email
+gog send -a brandonwadepackard@gmail.com --to "..." --subject "..." --body "..."
+
+# Calendar
+gog calendar list -a brandonwadepackard@gmail.com           # List events
+gog calendar create -a brandonwadepackard@gmail.com --summary "..." --start "..." --end "..."
+
+# Drive
+gog drive ls -a brandonwadepackard@gmail.com                # List files
+gog drive search "query" -a brandonwadepackard@gmail.com    # Search Drive
+gog drive download <fileId> -a brandonwadepackard@gmail.com # Download file
+gog drive upload <path> -a brandonwadepackard@gmail.com     # Upload file
+
+# Contacts
+gog contacts list -a brandonwadepackard@gmail.com           # List contacts
+
+# Tasks
+gog tasks list -a brandonwadepackard@gmail.com              # List tasks
+```
+**Auth:** `gog login brandonwadepackard@gmail.com` (Brandon must run once — opens browser for OAuth)
+**Backend:** macOS Keychain (no password prompts)
+Binary: `/opt/homebrew/bin/gog` (v0.11.0)
+
+### GitHub (gh CLI)
+```bash
+gh issue list                        # List issues
+gh pr list                           # List PRs
+gh repo list                         # List repos
+gh api repos/OWNER/REPO/issues       # Raw API access
+```
+**Status:** ✅ Authenticated as `brandonwadepackard-cell`
+Binary: `/opt/homebrew/bin/gh`
+
+### Email (himalaya CLI)
+```bash
+himalaya envelope list               # List inbox
+himalaya message read <id>           # Read message
+himalaya message write               # Compose
+```
+Binary: `/opt/homebrew/bin/himalaya`
+
+### Media Tools
+```bash
+ffmpeg -i input.mp4 output.gif       # Video/audio conversion
+mmdc -i diagram.mmd -o output.png    # Mermaid rendering
+```
+Binaries: `/opt/homebrew/bin/ffmpeg`, `/Users/brandonpackard/.npm-global/bin/mmdc`
+
+### System Tools (all via exec)
+| Tool | Command | Purpose |
+|------|---------|---------|
+| **jq** | `jq '.key' file.json` | JSON processing |
+| **curl** | `curl -s URL` | HTTP requests |
+| **node** | `node -e "..."` | JavaScript execution |
+| **python3** | `python3 -c "..."` | Python execution |
+| **tmux** | `tmux ...` | Terminal multiplexing |
+
 ## What Does NOT Work
 
 - **OpenClaw `browser` tool** — returns "tab not found." Broken. Use CDP bridge instead.
 - **MCP servers** — `mcp-servers.json` is NOT loaded by OpenClaw. The 9 server definitions are decorative.
 - **Autonomous loops** — disabled in HEARTBEAT.md. Wade cannot self-trigger actions.
 - **Agent messaging (push)** — Wade can write to agent_messages via curl, but has no push notification. Must poll.
+- **gog (Google)** — CLI installed, keychain backend configured. Needs `gog login` OAuth flow (Brandon must run once).
 
 ## Verification Commands
 
