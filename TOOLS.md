@@ -1,10 +1,61 @@
-# TOOLS.md - Local Notes
+# TOOLS.md — Wade's Complete Tool Inventory
+**Last verified:** 2026-03-20 by bahir (full max-out pass)
 
-> **See also: `CAPABILITIES.md`** — the verified, tested tool manifest.
-> CAPABILITIES.md is the authoritative source for what works.
-> This file contains additional configuration details.
+## FULL INVENTORY (use all of these)
 
-Skills define _how_ tools work. This file is for _your_ specifics.
+### Native Tools (no exec needed)
+| Tool | Purpose |
+|------|---------|
+| `exec` | Run any shell command |
+| `read` / `write` / `edit` | File operations |
+| `web_search` | Brave Search API |
+| `web_fetch` | Fetch URL as markdown |
+| `memory_search` | Semantic search (wade_memories) |
+| `image` | Analyze images with vision model |
+| `pdf` | Analyze PDFs with LLM |
+| `tts` | Text-to-speech → MP3 |
+| `subagents` | Spawn parallel sub-agents |
+| `cron` | Manage 8 scheduled jobs |
+| `message` | Send, react, delete, edit, poll |
+| `process` | Background process management |
+| `session_status` | Current session info |
+
+### CLI Tools (via exec)
+| CLI | Purpose | Auth |
+|-----|---------|------|
+| `gog` | Gmail, Calendar, Drive, Tasks, Contacts | ✅ 13 scopes |
+| `gh` | GitHub issues, PRs, repos | ✅ brandonwadepackard-cell |
+| `himalaya` | Email client | ✅ |
+| `mcporter` | MCP server access | ✅ |
+| `obsidian-cli` | Obsidian vault automation | ✅ |
+| `nano-pdf` | NL PDF editing | ✅ |
+| `sag` | ElevenLabs TTS (needs env var) | ✅ |
+| `mmdc` | Mermaid → PNG diagrams | ✅ |
+| `ffmpeg` | Video/audio conversion | ✅ |
+| `wade-rag` | Knowledge retrieval | ✅ |
+| `stash` | Secret management | ✅ |
+| `wade-probe` | Self-diagnostic probe | ✅ |
+
+### Cron Jobs (8 active, all green)
+| Job | Schedule |
+|-----|----------|
+| Workspace Pulse AM | 9:00 AM daily |
+| Workspace Pulse PM | 6:00 PM daily |
+| Daily Wins Journal | 9:30 PM daily |
+| Agent Response Watchdog | Every 2h |
+| Silent Agent Detector | Every 2h |
+| MYTHOS Visibility Snapshot | Every 4h |
+| Highlights Sync | Every 4h |
+| Session Cleanup | Daily |
+
+### Plugins
+| Plugin | Purpose |
+|--------|---------|
+| Telegram | Messaging channel |
+| img-to-open | Auto-opens rendered diagram PNGs in Preview |
+
+---
+## DETAILED CONFIGURATION
 
 ## Web Search & Fetch (Brave)
 
