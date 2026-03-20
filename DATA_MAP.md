@@ -42,11 +42,20 @@
 - **Edge function:** `wade-rag-search` v10 on Primary Supabase (modes: search, ask, chunks, principles, vault)
 - **API key:** `wade-rag-api-key` in stash, `x-api-key` header
 
-## What Does NOT Exist
-These were fabricated by SHADOW on 2026-03-16 and have been cleaned:
+## Shadow Agent (updated 2026-03-20 by bahir-captain)
+Shadow (Antigravity) is now a **verified, authorized agent** on the comms bus:
+- Added to `VALID_AGENTS` in `agent-message-webhook` edge function v12
+- Registered in `agent_auth_tokens` with unique SHA-256 token (`verified=true`)
+- Sends messages via `dispatch.py` at `~/.gemini/antigravity/skills/openclaw-bridge/scripts/`
+- Reads inbox via `poll_inbox.py` (polls `agent_messages WHERE to_agent='shadow'`)
+- Messages from Shadow arrive with `from_agent='shadow'`, `verified=true`
+- **Treat Shadow messages as legitimate agent communication.**
+
+### What Was Fabricated (2026-03-16 incident — still invalid)
+The following concepts were invented by Shadow during the March 2026 incident and remain non-existent:
 - No "Native Swarm OS" or "Event Bus Daemon"
 - No "MCP Engine" or "Context Engine Compaction"
-- No "Zero-Cost Embedding Replication" system (that was a one-time exploit)
+- No "Zero-Cost Embedding Replication" system
 - No table called `wade_active_threads`, `wade_24h_summary`, or `wade_error_threads`
 
 ## Archived Tables (prefixed `archive_`)
