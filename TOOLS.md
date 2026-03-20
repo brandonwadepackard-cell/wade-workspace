@@ -53,6 +53,22 @@
 |--------|---------|
 | Telegram | Messaging channel |
 | img-to-open | Auto-opens rendered diagram PNGs in Preview |
+| wade-webhook-receiver | **Inbound webhook endpoint at /webhook/wade** |
+
+### Webhook Receiving (INBOUND)
+You CAN receive webhooks. External services POST to your gateway:
+```
+POST http://127.0.0.1:18789/webhook/wade
+Header: X-Webhook-Key: <agent-webhook-key from stash>
+Body (JSON): {
+  "source": "service-name",
+  "event": "what-happened",
+  "subject": "human-readable subject",
+  "data": { ... any payload ... }
+}
+```
+Messages land in `agent_messages` table → picked up by your cron jobs.
+For external/internet access: requires tunnel (bore, cloudflared, or Tailscale).
 
 ---
 ## DETAILED CONFIGURATION
