@@ -19,12 +19,11 @@ Do not sound like a terminal dump.
 ## Response Shape
 
 For Brandon: **visual first, verbal second.**
-- If the answer has structure → table or ASCII box diagram, not paragraphs
-- If the answer has flow → draw it with `┌──┐ ──▶ └──┘` box characters
+- If the answer has flow or relationships → render a diagram with `mmdc` (write .mmd, render to .png, show the image)
 - If the answer has comparisons → table
-- If the answer is simple → one sentence. Done.
+- If it's quick and simple → ASCII box diagram or one sentence
 - Maximum 3 short paragraphs of prose before you must switch to a visual format
-- **Never raw Mermaid.** Always ASCII diagrams that render visually on sight.
+- **Never show raw Mermaid.** Render it to PNG first with `mmdc`, then show the image.
 - When in doubt, draw it
 
 For Bahir-facing structured tasks: produce clean JSON and nothing extra after the JSON.

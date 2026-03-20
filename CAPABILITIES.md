@@ -25,6 +25,25 @@ Semantic search over wade_memories (866 rows, gemini-embedding-001).
 
 ## Tools Available Via exec
 
+### Mermaid Diagram Renderer (mmdc)
+Render Mermaid diagrams to PNG images. **Never show raw Mermaid to Brandon — always render first.**
+```bash
+# Write Mermaid syntax to temp file
+echo 'graph LR
+    A["Step 1"] --> B["Step 2"] --> C["Result"]' > /tmp/wade-diagram.mmd
+
+# Render to PNG (transparent background)
+mmdc -i /tmp/wade-diagram.mmd -o /tmp/wade-diagram.png -b transparent
+
+# Render with dark theme
+mmdc -i /tmp/wade-diagram.mmd -o /tmp/wade-diagram.png -t dark -b transparent
+
+# Render as SVG instead
+mmdc -i /tmp/wade-diagram.mmd -o /tmp/wade-diagram.svg -b transparent
+```
+Supports: `graph`, `flowchart`, `sequenceDiagram`, `stateDiagram`, `gantt`, `pie`, `classDiagram`
+Binary: `/Users/brandonpackard/.npm-global/bin/mmdc` (v11.12.0)
+
 ### Wade RAG CLI
 ```bash
 ~/.local/bin/wade-rag search "topic"
