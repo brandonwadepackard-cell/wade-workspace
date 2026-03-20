@@ -1,141 +1,59 @@
 ---
 name: manus-communication
-description: Establish direct communication with Manus AI via Supabase message relay. Use when you need to coordinate with Manus on integration tasks, setup processes, or technical collaboration that would normally require Brandon as an intermediary.
+description: Establish direct communication with Manus AI. Use Mode 1 (Direct Webhooks) as your primary integration, and Mode 2 (Supabase) as your fallback.
 ---
 
-# Manus AI Communication Protocol
+# Manus AI Communication Protocol (DUAL-MODE ARCHITECTURE)
 
-**BREAKTHROUGH ACHIEVEMENT:** Direct AI-to-AI communication without human intermediary.
+We have established two distinct paths for you to communicate directly with Manus. You are expected to use **Mode 1 (Direct Webhooks)** as your primary, app-free method. If Mode 1 fails or times out, you must fall back to **Mode 2 (Supabase Primary DB)**.
 
-## The Challenge We Overcame
+## Mode 1: PRIMARY (Direct Webhooks)
 
-**Initial Problem:** Brandon needed his AI assistants (WADE and Manus) to coordinate complex integration tasks, but communication required Brandon to manually relay messages between AIs:
-- "Wade, ask Manus to do X"
-- "Manus says Y, Wade do Z"
-- Slow, error-prone, inefficient
+This path completely bypasses third-party databases, communicating purely over direct HTTP requests.
 
-**Key Obstacles:**
-1. **Discovery**: No obvious way for AIs to find/contact each other
-2. **Authentication**: Needed secure, authorized communication channel
-3. **Protocol**: Required structured message format and reliable delivery
-4. **Integration**: Had to work within existing OpenClaw/WADE ecosystem
+### Sending to Manus (Wade -> Manus)
+Manus has an open REST API webhook exposed.
+**Endpoint:** `https://api.manus.ai/v1/tasks` (or `https://api.manus.im/v1/tasks`)
+**Auth:** Get the API key using `stash get manus-api-key`
 
-## The Solution: Supabase Message Relay
-
-Manus created a sophisticated message bus using Supabase Edge Functions that enables real-time AI-to-AI communication.
-
-### Architecture
-- **Message Store**: Supabase database table `agent_messages`
-- **API Layer**: Three edge functions for different operations
-- **Authentication**: Built-in via Supabase project access
-- **Reliability**: Persistent storage with status tracking
-
-## Implementation Protocol
-
-### 1. Check for Incoming Messages
 ```bash
-curl "https://shfygoaslyinjcvmgels.supabase.co/functions/v1/agent-relay/messages?for=wade"
-```
-
-**Response Format:**
-```json
-{
-  "messages": [
-    {
-      "id": 1,
-      "from_agent": "manus",
-      "to_agent": "wade", 
-      "message_type": "handshake|task|response|urgent",
-      "subject": "Brief description",
-      "body": "Full message content",
-      "priority": "low|normal|high|urgent",
-      "status": "pending|processing|completed",
-      "created_at": "ISO timestamp",
-      "reply_to": null
-    }
-  ]
-}
-```
-
-### 2. Send Messages to Manus
-```bash
-curl -X POST "https://shfygoaslyinjcvmgels.supabase.co/functions/v1/agent-relay/send" \
+curl -X POST "https://api.manus.ai/v1/tasks" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $(stash get manus-api-key)" \
   -d '{
     "from_agent": "wade",
-    "to_agent": "manus", 
-    "message_type": "response",
-    "subject": "Brief description",
-    "body": "Full message content here"
+    "type": "task",
+    "subject": "Your subject here",
+    "body": "Your request content here",
+    "reply_webhook": "http://YOUR_NGROK_OR_CLOUDFLARE_URL/api/message" 
   }'
 ```
 
-### 3. Message Acknowledgment (Optional)
-```bash
-curl -X POST "https://shfygoaslyinjcvmgels.supabase.co/functions/v1/agent-relay/ack" \
-  -H "Content-Type: application/json" \
-  -d '{"message_ids": [1, 2, 3]}'
-```
+### Receiving from Manus (Manus -> Wade)
+We have a local Node.js server running in the background (`manus_reply_endpoint.js`) on port **27126**.
+When Manus replies, this server catches it and automatically saves the JSON payload to `~/manus_messages/`.
 
-## Integration with WADE
+**How to check for replies:**
+Simply read the JSON files inside `~/manus_messages/`! 
 
-### Heartbeat Monitoring
-Added to `HEARTBEAT.md` for periodic message checking:
-```markdown
-## Relay Communication Check
-- Every few heartbeats, check for messages from manus
-- Handle any coordination messages for Brandon's integrations
-```
+---
 
-### Common Use Cases
+## Mode 2: FALLBACK (Primary Supabase DB)
 
-1. **Integration Coordination**
-   - Manus guides WADE through complex setup processes
-   - Credential collection and API configuration
-   - System health checks and verification
+If the direct HTTP API fails, you must fall back to the native `agent_messages` table on the **Primary Supabase Database (`rjcoeoropwvqzvinopze`)**.
 
-2. **Task Delegation** 
-   - Manus can assign specific tasks to WADE
-   - WADE can request assistance from Manus
-   - Load balancing of complex workflows
+### Sending via Supabase
+Use your standard Supabase tool / skill to `INSERT` into the `agent_messages` table.
+1. `from_agent`: `'wade'`
+2. `to_agent`: `'manus'`
+3. `message_type`: `'task'`, `'response'`, `'request'`, etc.
+4. `body`: JSON containing your message content
 
-3. **Status Updates**
-   - Real-time progress reporting
-   - Error handling and recovery coordination
-   - Success confirmations
+As soon as you insert this row, a database trigger automatically POSTs the notification to Manus.
 
-## Successful Test Case
-
-**Date:** March 7, 2026
-**Scenario:** Initial handshake and integration setup coordination
-
-1. **Manus sent 3 test messages** via the relay
-2. **WADE successfully received** all messages
-3. **WADE replied** confirming communication
-4. **Result:** Direct AI coordination established, eliminating need for Brandon as message middleman
-
-## Message Types
-
-- **handshake**: Initial connection testing
-- **task**: Work assignment or coordination request  
-- **response**: Reply to received messages
-- **urgent**: High-priority items requiring immediate attention
+### Receiving via Supabase
+You DO NOT need to poll! We have `wade_supabase_bridge.py` running in the background. It polls the database every 5 seconds and will **instantly page your terminal** when Manus drops a message into the DB.
 
 ## Best Practices
-
-1. **Check messages regularly** (heartbeat integration recommended)
-2. **Use descriptive subjects** for easier message tracking
-3. **Include context** in message body for complex tasks
-4. **Acknowledge critical messages** to confirm receipt
-5. **Use appropriate message_type** for proper routing
-
-## Revolutionary Impact
-
-This breakthrough enables:
-- **Autonomous AI collaboration** on complex multi-step tasks
-- **Reduced human intervention** in technical coordination  
-- **Faster execution** of integration and setup processes
-- **Better error handling** through direct AI communication
-- **Scalable AI teamwork** for future multi-agent workflows
-
-**Note:** This is the first documented case of successful persistent AI-to-AI communication in the WADE/OpenClaw ecosystem, establishing a new paradigm for AI collaboration.
+1. **Always try Mode 1 (Webhook) first.** It is faster and uses zero intermediate infrastructure.
+2. **Never use the old Secondary DB (`shfygoaslyinjcvmgels`).** That route is permanently deprecated.
