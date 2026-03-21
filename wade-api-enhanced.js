@@ -13,6 +13,12 @@ const THOUGHTS_LOG = path.join(process.env.HOME, '.openclaw', 'workspace', 'logs
 const OPENCLAW_BIN = '/Users/brandonpackard/.npm-global/bin/openclaw';
 let langfuseClient = null;
 
+// Spine — canonical observability (fails gracefully if unavailable)
+let spine = null;
+try {
+  spine = require('/Users/brandonpackard/Projects/collab/workspace/lib/task_spine.js');
+} catch (_) {}
+
 // Enhanced logging
 function log(level, message, data = null) {
   const timestamp = new Date().toISOString();
@@ -408,9 +414,12 @@ app.post('/api/wade/task', rateLimit, enforceBoundary, async (req, res) => {
       sessionKey: req.body?.sessionKey || null
     }
   });
+  // Spine tracking vars — declared outside try so catch can access them
+  let _spineJobId = null;
+  let _spineTaskId = null;
   try {
     const { task, context = '', sessionKey = null } = req.body;
-    
+
     if (!task) {
       taskSpan?.end({
         level: 'ERROR',
@@ -427,6 +436,27 @@ app.post('/api/wade/task', rateLimit, enforceBoundary, async (req, res) => {
       });
     }
     
+    // Spine: open job + create task
+    if (spine) {
+      try {
+        const _job = await spine.createJob('wade_task', String(task).slice(0, 120), 'wade', {});
+        _spineJobId = _job.id || null;
+        if (_spineJobId) {
+          const _task = await spine.createTask(_spineJobId, 'research', 'wade', 'wade', String(task).slice(0, 120));
+          _spineTaskId = _task.id || null;
+          if (_spineTaskId) {
+            await spine.claimTask(_spineTaskId, 'wade');
+            await spine.emitEvent(_spineJobId, 'task_claimed', 'wade', {
+              taskId: _spineTaskId,
+              payload: { task_type: 'research' }
+            });
+          }
+        }
+      } catch (spineErr) {
+        log('warn', '[SPINE] open failed', { error: spineErr.message });
+      }
+    }
+
     const startTime = Date.now();
     const response = await sendToWade(task, context, sessionKey, trace);
     const duration = Date.now() - startTime;
@@ -457,6 +487,43 @@ app.post('/api/wade/task', rateLimit, enforceBoundary, async (req, res) => {
       }
     });
 
+    // Spine: attach artifact + close task + job
+    if (spine && _spineJobId) {
+      try {
+        const _art = await spine.appendArtifact(_spineJobId, 'wade', 'research_result', {
+          taskId: _spineTaskId,
+          summary: String(structured.summary || '').slice(0, 500),
+          sourceAuthority: spine.TRUTH_VERIFIED,
+          provenance: {
+            trace_id: trace?.id || null,
+            session_key: response.session_id,
+            openclaw_run_id: response.raw?.runId || null,
+            duration_ms: duration,
+            confidence: structured.confidence || null,
+          },
+        });
+        await spine.emitEvent(_spineJobId, 'artifact_created', 'wade', {
+          taskId: _spineTaskId,
+          artifactId: _art?.id || null,
+          payload: { artifact_type: 'research_result' }
+        });
+        if (_spineTaskId) {
+          await spine.markDone(_spineTaskId, _art?.id || null);
+          await spine.emitEvent(_spineJobId, 'task_completed', 'wade', {
+            taskId: _spineTaskId,
+            artifactId: _art?.id || null
+          });
+        }
+        await spine.completeJob(_spineJobId);
+        await spine.emitEvent(_spineJobId, 'job_completed', 'wade', {
+          taskId: _spineTaskId,
+          artifactId: _art?.id || null
+        });
+      } catch (spineErr) {
+        log('warn', '[SPINE] close failed', { error: spineErr.message });
+      }
+    }
+
     taskSpan?.end({
       output: structured,
       metadata: {
@@ -486,6 +553,23 @@ app.post('/api/wade/task', rateLimit, enforceBoundary, async (req, res) => {
     
   } catch (err) {
     log('error', 'Task endpoint error', { error: err.message });
+    // Spine: record failure
+    if (spine && _spineJobId) {
+      try {
+        if (_spineTaskId) {
+          await spine.markBlocked(_spineTaskId, 'WADE_ERROR', String(err.message).slice(0, 500));
+          await spine.emitEvent(_spineJobId, 'task_blocked', 'wade', {
+            taskId: _spineTaskId,
+            payload: { block_code: 'WADE_ERROR' }
+          });
+        }
+        await spine.failJob(_spineJobId, 'WADE_ERROR', String(err.message).slice(0, 500));
+        await spine.emitEvent(_spineJobId, 'job_failed', 'wade', {
+          taskId: _spineTaskId,
+          payload: { failure_code: 'WADE_ERROR' }
+        });
+      } catch (_) {}
+    }
     taskSpan?.end({
       level: 'ERROR',
       statusMessage: err.message,
